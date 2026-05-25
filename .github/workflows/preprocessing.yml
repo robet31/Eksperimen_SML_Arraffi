@@ -1,0 +1,60 @@
+name: Automated Preprocessing
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  preprocess:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.12.7
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12.7'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas numpy scikit-learn
+
+    - name: Download raw dataset
+      run: |
+        mkdir -p winequality_raw
+        curl -o winequality_raw/winequality-red.csv "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv"
+        curl -o winequality_raw/winequality-white.csv "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv"
+
+    - name: Run automated preprocessing
+      run: |
+        cd preprocessing
+        python automate_Arraffi.py
+
+    - name: Verify preprocessed data
+      run: |
+        echo "Listing preprocessed files:"
+        ls -la preprocessing/winequality_preprocessing/
+        echo "Train data preview:"
+        head -5 preprocessing/winequality_preprocessing/train.csv
+        echo "Test data preview:"
+        head -5 preprocessing/winequality_preprocessing/test.csv
+
+    - name: Upload preprocessed dataset
+      uses: actions/upload-artifact@v3
+      with:
+        name: winequality-preprocessed
+        path: preprocessing/winequality_preprocessing/
+
+    - name: Commit preprocessed data
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add preprocessing/winequality_preprocessing/
+        git diff --staged --quiet || git commit -m "Auto-update preprocessed dataset [skip ci]"
+        git push || echo "Nothing to push"
