@@ -1,1 +1,1 @@
-fix: sanitize input to prevent injection - 2026-09-15
+fix: prevent crash on malformed request - 2026-09-16
