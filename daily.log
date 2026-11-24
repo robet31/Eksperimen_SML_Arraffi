@@ -1,1 +1,1 @@
-chore: update dependencies to latest minor - 2026-11-22
+fix: resolve race condition on async - 2026-11-24
